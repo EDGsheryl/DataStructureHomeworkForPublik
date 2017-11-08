@@ -12,16 +12,29 @@ public:
     size_t size() const; //get length of the string
     bool isEmpty() const; //return true if the string is null
     void empty(); //set the string to null
-    cstring& concate(const cstring&); //concate two strings, result is stored into [this] string
-    cstring& concate(const char *); //overloading
-    char * get_str() const; //return the inner pointer
+    cstring &concate(const cstring &); //concate two strings, result is stored into [this] string
+    cstring &concate(const char *); //overloading
+    char *get_str() const; //return the inner pointer
     cstring(); //default constructor
     cstring(char); //trivial constructor
     cstring(const char *); //trivial constructor
-    cstring(const cstring&); //copy constructor
-    cstring(cstring&&); //move copy constructor
+    cstring(const cstring &); //copy constructor
+    cstring(cstring &&); //move copy constructor
     ~cstring();
+
+    cstring &operator=(const char *str);
+    cstring &operator=(const cstring &str);
+    cstring &operator=(char *&&str);
+    cstring &operator=(cstring &&str) noexcept;
+    cstring &operator+=(const char *str);
+    cstring &operator+=(const cstring &str);
+    cstring operator+(const cstring &str);
+    char& operator[](std::size_t n);
+    friend ostream &operator<<(ostream &os, const cstring &str);
+    friend istream &operator>>(istream &is, cstring &str);
 };
+
+class cstring;
 
 size_t cstring::_strlen(const char *str) {
     if (str == nullptr) return 0;
@@ -35,8 +48,12 @@ size_t cstring::_strlen(const char *str) {
 }
 char* cstring::_strcpy(char *dest, const char *src) {
     auto p1 = dest;
+    if (dest== nullptr || dest==NULL)
+    {
+        p1 = dest = new char[this->_strlen(src)+1];
+    }
     auto p2 = src;
-    while ((*p2) != '\0') {
+    while (p2!=NULL && (*p2) != '\0') {
         *p1 = *p2;
         p1++;
         p2++;
@@ -44,6 +61,7 @@ char* cstring::_strcpy(char *dest, const char *src) {
     *p1 = 0;
     return dest;
 }
+
 char* cstring::_strcat(char *dest, const char *src) {
     char *now=new char[this->_strlen(dest)+1];
     this->_strcpy(now,dest);
@@ -117,6 +135,76 @@ cstring::cstring(cstring&& str) {
 }
 cstring::~cstring() {
     delete[] this->a;
+}
+
+cstring& cstring::operator=(const char *str) {
+    this->a=this->_strcpy(this->a,str);
+    return *this;
+}
+
+cstring& cstring::operator=(const cstring &str) {
+    this->a=this->_strcpy(this->a,str.a);
+}
+
+cstring& cstring::operator+=(const char *str) {
+    this->a=this->_strcat(this->a,str);
+}
+
+cstring& cstring::operator+=(const cstring &str) {
+    this->a=this->_strcat(this->a,str.a);
+}
+
+cstring cstring::operator+(const cstring &str) {
+    cstring ret;
+    ret.a=ret._strcat(ret.a,this->a);
+    ret.a=ret._strcat(ret.a,str.a);
+    return std::move(ret);
+}
+
+char& cstring::operator[](std::size_t n) {
+    return this->a[n];
+}
+
+istream& operator>>(istream &is, cstring &str) {
+    int maxcnt=2; // char[] size
+    char *tmp = new char[maxcnt+1];
+    int cnt=0;
+    char ch;
+    cstring* ret;
+    while ((ch=is.get()) && (ch!=' ' && ch!='\n'))
+    {
+        tmp[cnt++]=ch;
+        if (cnt==maxcnt)
+        {
+            maxcnt<<=1;
+            char *nxt = new char[maxcnt+1];
+            str._strcpy(nxt,tmp);
+            std::swap(nxt,tmp);
+            delete[] nxt;
+        }
+    }
+    tmp[cnt++]=0;
+    str.a=tmp;
+    return is;
+}
+
+ostream& operator<<(ostream &os, const cstring &str) {
+    os<<str.a;
+    return os;
+}
+
+cstring &cstring::operator=(char *&&str) {
+    this->a=str;
+    this->length=this->_strlen(str);
+    str= nullptr;
+    return *this;
+}
+
+cstring &cstring::operator=(cstring &&str) noexcept {
+    this->a=str.a;
+    this->length=str.length;
+    str.a= nullptr;
+    return *this;
 }
 
 //DO NOT CHANGE ANYTHING BELOW!!!
