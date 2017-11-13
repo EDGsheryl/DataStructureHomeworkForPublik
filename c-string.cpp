@@ -1,8 +1,8 @@
 #include <iostream>
 using namespace std;
 
-class cstring {
-//your codes go here
+class cstring
+{
     char *a;
     size_t length;
 public:
@@ -32,6 +32,7 @@ public:
     char& operator[](std::size_t n);
     friend ostream &operator<<(ostream &os, const cstring &str);
     friend istream &operator>>(istream &is, cstring &str);
+    friend cstring operator+(char &ch,cstring &str);
 };
 
 class cstring;
@@ -115,6 +116,7 @@ cstring::cstring() {
 cstring::cstring(char x) {
     this->a =new char[2];
     this->a[0]=x;
+    this->a[1]=0;
     this->length=1;
 }
 cstring::cstring(const char * str) {
@@ -167,7 +169,7 @@ char& cstring::operator[](std::size_t n) {
 
 istream& operator>>(istream &is, cstring &str) {
     int maxcnt=2; // char[] size
-    char *tmp = new char[maxcnt+1];
+    char *tmp = new char[maxcnt+2];
     int cnt=0;
     char ch;
     cstring* ret;
@@ -177,9 +179,10 @@ istream& operator>>(istream &is, cstring &str) {
         if (cnt==maxcnt)
         {
             maxcnt<<=1;
-            char *nxt = new char[maxcnt+1];
-            str._strcpy(nxt,tmp);
-            std::swap(nxt,tmp);
+            char *nxt = new char[maxcnt+2];
+            tmp[cnt]=0;
+            nxt = str._strcpy(nxt,tmp);
+            swap(nxt,tmp);
             delete[] nxt;
         }
     }
@@ -207,12 +210,12 @@ cstring &cstring::operator=(cstring &&str) noexcept {
     return *this;
 }
 
-//DO NOT CHANGE ANYTHING BELOW!!!
-void puts(const cstring& s)
-{
-    cout << s.get_str();
+cstring operator+(char &ch, cstring &str) {
+    cstring ret(ch);
+    return std::move(ret+str);
 }
 
+//DO NOT CHANGE ANYTHING BELOW!!!
 cstring f(const char *s)
 {
     return cstring(s);
@@ -220,12 +223,16 @@ cstring f(const char *s)
 
 int main()
 {
-    char b1[128], b2[128];
-    cin >> b1 >> b2;
+    cstring s1, s2;
+    char buf1[128], buf2[128];
 
-    cstring s1(b1), s2(s1);
+    cin >> s1 >> buf1 >> buf2;
 
-    puts(s2.concate(f(b2)));
+    cstring s3(buf2);
+    s2 = s1;
+    s2 += f(buf1);
+    s1 = s3[5] + s2;
+    cout << s1 << endl;
 
     return 0;
 }
