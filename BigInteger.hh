@@ -1,5 +1,10 @@
+#include <iostream>
 #include <vector>
 #include <queue>
+
+/*
+    it may go wrong, bad design =A=
+*/
 
 #ifndef _INTEGER_H_
 # define _INTEGER_H_
