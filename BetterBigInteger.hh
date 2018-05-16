@@ -21,7 +21,6 @@ public:
 
     friend integer operator-(const integer &);
     friend integer operator+(const integer &);
-
     friend integer operator+(integer, const integer &);
     friend integer &operator+=(integer &, const integer &);
     friend integer operator-(integer, const integer &);
@@ -223,7 +222,7 @@ integer &operator*=(integer &lhs, const integer &rhs) {
 
 integer &operator<<=(integer &lhs, const uint32_t &rhs) {
     int k = rhs >> 5;
-    int off = rhs & 0xff;
+    int off = rhs % 32;
     for (int i = (off ? k + 1 : k); i > 0; i--)
         lhs.num.push_back(0);
     if (k) {
@@ -251,10 +250,9 @@ integer &operator<<=(integer &lhs, const uint32_t &rhs) {
 
 integer &operator>>=(integer &lhs, const uint32_t &rhs) {
     int k = rhs >> 5;
-    int off = rhs & 0xff;
+    int off = rhs % 32;
 
     if (k) {
-        int cnt = off == 0 ? 1 : 2;
         for (int i = 0; i + k < lhs.num.size(); i++)
             lhs.num[i] = lhs.num[i + k];
         for (int i = 0; i < k; i++)
@@ -263,9 +261,9 @@ integer &operator>>=(integer &lhs, const uint32_t &rhs) {
 
     if (off) {
         uint32_t T = 0xffffffff;
-        T = T >> off;
+        T = T >> (32 - off);
         for (int i = 0; i + 1 < lhs.num.size(); i++) {
-            lhs.num[i] = (lhs.num[i] >> off) | ((lhs.num[i + 1] & T) << off);
+            lhs.num[i] = ((lhs.num[i] >> off) | (((lhs.num[i + 1] & T) << (32 - off))));
         }
         if (!lhs.num.empty()) lhs.num[lhs.num.size() - 1] >>= off;
     }
@@ -331,7 +329,8 @@ integer &operator/=(integer &lhs, const integer &rhs) {
     integer l = integer::ZERO, r = temp1;
 
     while (r - l > 1) {
-        integer mid = (l + r) >> 1;
+        assert(r >= l);
+        integer mid = ((l + r) >> 1);
         if (mid * temp2 > temp1)
             r = mid;
         else
@@ -348,7 +347,8 @@ integer operator/(integer lhs, const integer &rhs) {
 }
 
 integer &operator%=(integer &lhs, const integer &rhs) {
-    integer temp = lhs / rhs * rhs;
+    integer temp = lhs / rhs;
+    temp = temp * rhs;
     temp = lhs - temp;
     lhs = temp;
     return lhs;
